@@ -1,0 +1,1677 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fantasy Football Commissioner Console</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --panel:#121b2f;
+      --panel2:#0f1730;
+      --text:#e9edf7;
+      --muted:#aab3c7;
+      --border:rgba(233,237,247,.12);
+      --accent:#4aa3ff;
+      --danger:#ff5b6b;
+      --good:#31d0aa;
+      --warn:#ffd166;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius:16px;
+      --radius2:12px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      background:radial-gradient(1200px 600px at 10% 0%, rgba(74,163,255,.25), transparent 60%),
+                 radial-gradient(800px 500px at 100% 20%, rgba(49,208,170,.12), transparent 55%),
+                 var(--bg);
+    }
+    a{color:inherit}
+
+    header{
+      position:sticky;
+      top:0;
+      z-index:10;
+      backdrop-filter: blur(10px);
+      background: linear-gradient(to bottom, rgba(11,18,32,.95), rgba(11,18,32,.70));
+      border-bottom:1px solid var(--border);
+    }
+    .wrap{max-width:1100px;margin:0 auto;padding:18px 18px 26px}
+    .topbar{display:flex;gap:12px;align-items:center;justify-content:space-between}
+    .brand{display:flex;gap:12px;align-items:center;min-width:0}
+    .logo{
+      width:42px;height:42px;border-radius:14px;
+      background: linear-gradient(135deg, rgba(74,163,255,.9), rgba(49,208,170,.75));
+      box-shadow: var(--shadow);
+    }
+    .titleblock{min-width:0}
+    .title{
+      display:flex;gap:10px;align-items:baseline;flex-wrap:wrap
+    }
+    .title h1{font-size:18px;margin:0;letter-spacing:.2px}
+    .title .pill{
+      font-size:12px;color:var(--muted);
+      border:1px solid var(--border);
+      padding:4px 8px;border-radius:999px
+    }
+    .subtitle{margin:4px 0 0;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+    .actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+
+    .btn{
+      appearance:none;border:1px solid var(--border);
+      background:rgba(18,27,47,.8);
+      color:var(--text);
+      padding:10px 12px;border-radius:12px;
+      cursor:pointer;
+      display:inline-flex;gap:8px;align-items:center;
+      transition: transform .05s ease, border-color .2s ease, background .2s ease;
+      user-select:none;
+      font-weight:600;
+    }
+    .btn:hover{border-color:rgba(74,163,255,.45)}
+    .btn:active{transform: translateY(1px)}
+    .btn.primary{background:rgba(74,163,255,.18); border-color: rgba(74,163,255,.45)}
+    .btn.danger{background:rgba(255,91,107,.12); border-color: rgba(255,91,107,.45)}
+    .btn.ghost{background:transparent}
+    .btn.small{padding:8px 10px;border-radius:10px;font-weight:600}
+    .btn:disabled{opacity:.45;cursor:not-allowed}
+
+    .grid{
+      display:grid;
+      grid-template-columns: 280px 1fr;
+      gap:16px;
+      padding-top:14px;
+    }
+    @media (max-width: 960px){
+      .grid{grid-template-columns: 1fr}
+    }
+
+    .panel{
+      background: linear-gradient(to bottom, rgba(18,27,47,.92), rgba(18,27,47,.78));
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .panel .hd{
+      padding:14px 14px 10px;
+      border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;gap:10px
+    }
+    .panel .hd h2{margin:0;font-size:14px;letter-spacing:.25px;color:var(--muted);text-transform:uppercase}
+    .panel .bd{padding:14px}
+
+    .nav{
+      display:flex;flex-direction:column;gap:6px;
+      padding:12px;
+    }
+    .tab{
+      display:flex;align-items:center;justify-content:space-between;
+      gap:10px;
+      padding:10px 12px;
+      border:1px solid transparent;
+      border-radius: 12px;
+      cursor:pointer;
+      color:var(--text);
+      background:transparent;
+    }
+    .tab small{color:var(--muted)}
+    .tab[aria-selected="true"]{
+      background: rgba(74,163,255,.14);
+      border-color: rgba(74,163,255,.35);
+    }
+    .tab:hover{background: rgba(233,237,247,.05)}
+
+    .content{
+      min-height:520px;
+    }
+
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .row.space{justify-content:space-between}
+
+    .kpi{
+      display:grid;grid-template-columns: repeat(3, 1fr);
+      gap:10px;
+      margin-bottom:12px;
+    }
+    @media (max-width: 680px){
+      .kpi{grid-template-columns: 1fr}
+    }
+    .card{
+      background: linear-gradient(to bottom, rgba(15,23,48,.95), rgba(15,23,48,.75));
+      border:1px solid var(--border);
+      border-radius: var(--radius2);
+      padding:12px;
+      display:flex;flex-direction:column;gap:6px;
+    }
+    .card .label{font-size:12px;color:var(--muted)}
+    .card .value{font-size:22px;font-weight:800;letter-spacing:.3px}
+    .card .note{font-size:12px;color:var(--muted)}
+
+    .tablewrap{overflow:auto;border:1px solid var(--border);border-radius:14px}
+    table{width:100%;border-collapse:collapse;background:rgba(15,23,48,.55)}
+    th,td{padding:10px 10px;border-bottom:1px solid var(--border);text-align:left;font-size:13px}
+    th{position:sticky;top:0;background:rgba(15,23,48,.92);color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.25px;font-size:12px}
+    tr:hover td{background:rgba(233,237,247,.03)}
+    td.num{text-align:right;font-variant-numeric: tabular-nums; font-family: var(--mono)}
+    .nowrap{white-space:nowrap}
+
+    .chip{
+      display:inline-flex;align-items:center;gap:6px;
+      border:1px solid var(--border);
+      padding:4px 8px;
+      border-radius:999px;
+      font-size:12px;color:var(--muted)
+    }
+    .chip.good{border-color:rgba(49,208,170,.45);color:rgba(49,208,170,.95)}
+    .chip.warn{border-color:rgba(255,209,102,.45);color:rgba(255,209,102,.95)}
+    .chip.bad{border-color:rgba(255,91,107,.45);color:rgba(255,91,107,.95)}
+
+    .form{
+      display:grid;
+      gap:10px;
+    }
+    .field{
+      display:grid;
+      gap:6px;
+    }
+    label{font-size:12px;color:var(--muted)}
+    input,select,textarea{
+      width:100%;
+      border:1px solid var(--border);
+      background:rgba(11,18,32,.45);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      outline:none;
+    }
+    textarea{min-height:90px;resize:vertical}
+    input:focus,select:focus,textarea:focus{border-color:rgba(74,163,255,.55)}
+    .hint{color:var(--muted);font-size:12px;line-height:1.4}
+
+    .split{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    @media (max-width: 680px){
+      .split{grid-template-columns:1fr}
+    }
+
+    dialog{
+      width:min(720px, calc(100vw - 24px));
+      border:none;
+      border-radius: 18px;
+      padding:0;
+      background: linear-gradient(to bottom, rgba(18,27,47,.98), rgba(18,27,47,.90));
+      color:var(--text);
+      box-shadow: 0 30px 80px rgba(0,0,0,.55);
+    }
+    dialog::backdrop{background: rgba(0,0,0,.55)}
+    .modal-hd{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .modal-hd h3{margin:0;font-size:14px;letter-spacing:.25px;color:var(--muted);text-transform:uppercase}
+    .modal-bd{padding:16px}
+    .modal-ft{padding:14px 16px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+
+    .empty{
+      padding:18px;
+      border:1px dashed rgba(233,237,247,.22);
+      border-radius: 16px;
+      color:var(--muted);
+      background: rgba(15,23,48,.35);
+    }
+
+    .toast{
+      position:fixed;
+      bottom:16px;
+      left:50%;
+      transform: translateX(-50%);
+      background: rgba(18,27,47,.94);
+      border:1px solid var(--border);
+      border-radius: 999px;
+      padding:10px 14px;
+      display:flex;gap:10px;align-items:center;
+      box-shadow: var(--shadow);
+      max-width: min(720px, calc(100vw - 24px));
+      z-index: 20;
+    }
+    .toast[hidden]{display:none}
+    .toast .msg{font-size:13px;color:var(--text)}
+    .toast .meta{font-size:12px;color:var(--muted)}
+
+    .mono{font-family: var(--mono)}
+    .muted{color:var(--muted)}
+
+    .score{
+      display:flex;gap:10px;align-items:center;flex-wrap:wrap
+    }
+    .score input{
+      width:120px
+    }
+    .weekbar{
+      display:flex;gap:8px;align-items:center;flex-wrap:wrap
+    }
+    .weekbar .btn{padding:8px 10px}
+
+    .pillbtn{
+      font-size:12px;
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(233,237,247,.05);
+      cursor:pointer;
+      color:var(--text);
+    }
+    .pillbtn[aria-pressed="true"]{border-color:rgba(74,163,255,.45); background: rgba(74,163,255,.14)}
+
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div class="titleblock">
+            <div class="title">
+              <h1 id="leagueTitle">Commissioner Console</h1>
+              <span class="pill" id="leagueSeason">Season</span>
+            </div>
+            <div class="subtitle" id="leagueSub">Manage teams, schedule, results, and standings — all offline (localStorage).</div>
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn" id="btnExport" title="Download a JSON backup">
+            <span aria-hidden="true">⬇️</span> Export
+          </button>
+          <button class="btn" id="btnImport" title="Import from a JSON backup">
+            <span aria-hidden="true">⬆️</span> Import
+          </button>
+          <button class="btn danger" id="btnReset" title="Reset everything">
+            <span aria-hidden="true">🧨</span> Reset
+          </button>
+          <button class="btn primary" id="btnSettings" title="League settings">
+            <span aria-hidden="true">⚙️</span> Settings
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+      <aside class="panel" aria-label="Navigation">
+        <div class="hd"><h2>Sections</h2><span class="chip" id="dataStatus">Saved</span></div>
+        <nav class="nav" id="nav">
+          <button class="tab" data-tab="dashboard" aria-selected="true">
+            <span>Dashboard</span>
+            <small id="navDashMeta">KPIs</small>
+          </button>
+          <button class="tab" data-tab="teams" aria-selected="false">
+            <span>Teams</span>
+            <small id="navTeamsMeta">0</small>
+          </button>
+          <button class="tab" data-tab="schedule" aria-selected="false">
+            <span>Schedule</span>
+            <small id="navScheduleMeta">0 wks</small>
+          </button>
+          <button class="tab" data-tab="results" aria-selected="false">
+            <span>Results</span>
+            <small id="navResultsMeta">Week 1</small>
+          </button>
+          <button class="tab" data-tab="standings" aria-selected="false">
+            <span>Standings</span>
+            <small id="navStandingsMeta">Live</small>
+          </button>
+          <button class="tab" data-tab="notes" aria-selected="false">
+            <span>Commissioner Notes</span>
+            <small id="navNotesMeta">Draft</small>
+          </button>
+        </nav>
+      </aside>
+
+      <section class="panel content" aria-live="polite">
+        <div class="hd">
+          <h2 id="sectionTitle">Dashboard</h2>
+          <div class="row">
+            <span class="chip" id="weekChip">Week 1</span>
+            <button class="btn small ghost" id="btnHelp" title="Quick tips">❓ Help</button>
+          </div>
+        </div>
+        <div class="bd" id="view"></div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Settings Modal -->
+  <dialog id="dlgSettings">
+    <div class="modal-hd">
+      <h3>League Settings</h3>
+      <button class="btn small ghost" data-close>✕</button>
+    </div>
+    <div class="modal-bd">
+      <form class="form" id="formSettings">
+        <div class="split">
+          <div class="field">
+            <label for="leagueName">League name</label>
+            <input id="leagueName" name="leagueName" required placeholder="e.g., Kris's Chaos League" />
+          </div>
+          <div class="field">
+            <label for="seasonYear">Season year</label>
+            <input id="seasonYear" name="seasonYear" type="number" min="2000" max="2100" required />
+          </div>
+        </div>
+        <div class="split">
+          <div class="field">
+            <label for="regularWeeks">Regular-season weeks</label>
+            <input id="regularWeeks" name="regularWeeks" type="number" min="1" max="30" required />
+            <div class="hint">Used as the default schedule length when generating matchups.</div>
+          </div>
+          <div class="field">
+            <label for="tiebreaker">Tiebreaker</label>
+            <select id="tiebreaker" name="tiebreaker">
+              <option value="pf">Points For (PF)</option>
+              <option value="pa">Points Against (PA)</option>
+              <option value="h2h">Head-to-Head (simple)</option>
+            </select>
+            <div class="hint">Head-to-Head is calculated only when teams have played each other.</div>
+          </div>
+        </div>
+        <div class="field">
+          <label for="playoffNotes">Playoff notes (optional)</label>
+          <textarea id="playoffNotes" name="playoffNotes" placeholder="e.g., Top 6 make playoffs. Top 2 get bye."></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn primary" id="btnSaveSettings">Save</button>
+    </div>
+  </dialog>
+
+  <!-- Team Modal -->
+  <dialog id="dlgTeam">
+    <div class="modal-hd">
+      <h3 id="teamModalTitle">Team</h3>
+      <button class="btn small ghost" data-close>✕</button>
+    </div>
+    <div class="modal-bd">
+      <form class="form" id="formTeam">
+        <input type="hidden" name="teamId" id="teamId" />
+        <div class="split">
+          <div class="field">
+            <label for="teamName">Team name</label>
+            <input id="teamName" name="teamName" required placeholder="e.g., The Bye Week Bandits" />
+          </div>
+          <div class="field">
+            <label for="teamOwner">Owner</label>
+            <input id="teamOwner" name="teamOwner" placeholder="e.g., Gina" />
+          </div>
+        </div>
+        <div class="split">
+          <div class="field">
+            <label for="teamAbbrev">Abbreviation</label>
+            <input id="teamAbbrev" name="teamAbbrev" maxlength="4" placeholder="e.g., BYE" />
+            <div class="hint">Optional. Used in compact schedule views.</div>
+          </div>
+          <div class="field">
+            <label for="teamColor">Color (optional)</label>
+            <input id="teamColor" name="teamColor" placeholder="#4aa3ff" />
+          </div>
+        </div>
+      </form>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn danger" id="btnDeleteTeam" hidden>Delete</button>
+      <button class="btn primary" id="btnSaveTeam">Save Team</button>
+    </div>
+  </dialog>
+
+  <!-- Import Modal -->
+  <dialog id="dlgImport">
+    <div class="modal-hd">
+      <h3>Import JSON</h3>
+      <button class="btn small ghost" data-close>✕</button>
+    </div>
+    <div class="modal-bd">
+      <div class="field">
+        <label for="importText">Paste your exported JSON</label>
+        <textarea id="importText" class="mono" placeholder='{"league":...,"teams":...,"schedule":...}'></textarea>
+        <div class="hint">Import overwrites your current league. Export first if you want a backup.</div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn" data-close>Cancel</button>
+      <button class="btn primary" id="btnDoImport">Import</button>
+    </div>
+  </dialog>
+
+  <!-- Help Modal -->
+  <dialog id="dlgHelp">
+    <div class="modal-hd">
+      <h3>Quick Help</h3>
+      <button class="btn small ghost" data-close>✕</button>
+    </div>
+    <div class="modal-bd">
+      <div class="empty">
+        <strong>How to use this</strong>
+        <ul>
+          <li><span class="mono">Teams</span>: Add/edit teams.</li>
+          <li><span class="mono">Schedule</span>: Generate a round-robin schedule (handles byes) or edit matchups manually.</li>
+          <li><span class="mono">Results</span>: Enter weekly scores. Standings update automatically.</li>
+          <li><span class="mono">Export</span>: Download a JSON backup. <span class="mono">Import</span> restores it.</li>
+        </ul>
+        <div class="hint">Tip: If you change teams after building a schedule, it’s usually best to regenerate the schedule.</div>
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="btn primary" data-close>Got it</button>
+    </div>
+  </dialog>
+
+  <div class="toast" id="toast" hidden>
+    <div class="msg" id="toastMsg">Saved</div>
+    <div class="meta" id="toastMeta"></div>
+  </div>
+
+  <script>
+    // Fantasy Football Commissioner Console (Vanilla JS)
+    // - Stores data in localStorage
+    // - Import/export JSON
+    // - Round-robin schedule generation (with bye support)
+    // - Standings w/ PF/PA and optional H2H tiebreak
+
+    const STORE_KEY = "ff_commish_app_v1";
+
+    /** @typedef {{id:string,name:string,owner?:string,abbrev?:string,color?:string}} Team */
+    /** @typedef {{homeId:string,awayId:string,homeScore:number|null,awayScore:number|null,completed:boolean}} Matchup */
+    /** @typedef {{week:number, matchups:Matchup[]}} Week */
+
+    /** @type {{league:{name:string, seasonYear:number, regularWeeks:number, tiebreaker:'pf'|'pa'|'h2h', playoffNotes?:string, notes?:string, currentWeek:number}, teams:Team[], schedule:Week[]}} */
+    let state = loadState();
+
+    const els = {
+      leagueTitle: document.getElementById('leagueTitle'),
+      leagueSeason: document.getElementById('leagueSeason'),
+      leagueSub: document.getElementById('leagueSub'),
+      view: document.getElementById('view'),
+      nav: document.getElementById('nav'),
+      sectionTitle: document.getElementById('sectionTitle'),
+      weekChip: document.getElementById('weekChip'),
+      dataStatus: document.getElementById('dataStatus'),
+
+      navTeamsMeta: document.getElementById('navTeamsMeta'),
+      navScheduleMeta: document.getElementById('navScheduleMeta'),
+      navResultsMeta: document.getElementById('navResultsMeta'),
+
+      btnSettings: document.getElementById('btnSettings'),
+      btnExport: document.getElementById('btnExport'),
+      btnImport: document.getElementById('btnImport'),
+      btnReset: document.getElementById('btnReset'),
+      btnHelp: document.getElementById('btnHelp'),
+
+      dlgSettings: document.getElementById('dlgSettings'),
+      formSettings: document.getElementById('formSettings'),
+      btnSaveSettings: document.getElementById('btnSaveSettings'),
+
+      dlgTeam: document.getElementById('dlgTeam'),
+      teamModalTitle: document.getElementById('teamModalTitle'),
+      formTeam: document.getElementById('formTeam'),
+      btnSaveTeam: document.getElementById('btnSaveTeam'),
+      btnDeleteTeam: document.getElementById('btnDeleteTeam'),
+
+      dlgImport: document.getElementById('dlgImport'),
+      importText: document.getElementById('importText'),
+      btnDoImport: document.getElementById('btnDoImport'),
+
+      dlgHelp: document.getElementById('dlgHelp'),
+
+      toast: document.getElementById('toast'),
+      toastMsg: document.getElementById('toastMsg'),
+      toastMeta: document.getElementById('toastMeta'),
+    };
+
+    let activeTab = 'dashboard';
+    let toastTimer = null;
+
+    init();
+
+    function init(){
+      wireUI();
+      renderShell();
+      render();
+      autosave();
+    }
+
+    function wireUI(){
+      // Tabs
+      els.nav.addEventListener('click', (e) => {
+        const btn = e.target.closest('[data-tab]');
+        if(!btn) return;
+        setTab(btn.dataset.tab);
+      });
+
+      // Global modal close buttons
+      document.addEventListener('click', (e) => {
+        const closeBtn = e.target.closest('[data-close]');
+        if(!closeBtn) return;
+        const dlg = closeBtn.closest('dialog');
+        if(dlg) dlg.close();
+      });
+
+      // Settings
+      els.btnSettings.addEventListener('click', () => openSettings());
+      els.btnSaveSettings.addEventListener('click', (e) => {
+        e.preventDefault();
+        saveSettings();
+      });
+
+      // Export/Import/Reset
+      els.btnExport.addEventListener('click', () => doExport());
+      els.btnImport.addEventListener('click', () => openImport());
+      els.btnReset.addEventListener('click', () => doReset());
+
+      els.btnDoImport.addEventListener('click', (e) => {
+        e.preventDefault();
+        doImport();
+      });
+
+      // Help
+      els.btnHelp.addEventListener('click', () => els.dlgHelp.showModal());
+
+      // Team modal actions
+      els.btnSaveTeam.addEventListener('click', (e) => {
+        e.preventDefault();
+        upsertTeamFromForm();
+      });
+      els.btnDeleteTeam.addEventListener('click', (e) => {
+        e.preventDefault();
+        deleteTeamFromForm();
+      });
+
+      // Close dialog on Escape is default
+    }
+
+    function renderShell(){
+      els.leagueTitle.textContent = state.league.name;
+      els.leagueSeason.textContent = `Season ${state.league.seasonYear}`;
+      els.weekChip.textContent = `Week ${state.league.currentWeek}`;
+
+      els.navTeamsMeta.textContent = `${state.teams.length}`;
+      els.navScheduleMeta.textContent = `${state.schedule.length} wks`;
+      els.navResultsMeta.textContent = `Week ${state.league.currentWeek}`;
+    }
+
+    function setTab(tab){
+      activeTab = tab;
+      for(const t of els.nav.querySelectorAll('[data-tab]')){
+        t.setAttribute('aria-selected', String(t.dataset.tab === tab));
+      }
+      const titleMap = {
+        dashboard: 'Dashboard',
+        teams: 'Teams',
+        schedule: 'Schedule',
+        results: 'Results',
+        standings: 'Standings',
+        notes: 'Commissioner Notes'
+      };
+      els.sectionTitle.textContent = titleMap[tab] ?? 'Dashboard';
+      render();
+    }
+
+    function render(){
+      renderShell();
+      if(activeTab === 'dashboard') return renderDashboard();
+      if(activeTab === 'teams') return renderTeams();
+      if(activeTab === 'schedule') return renderSchedule();
+      if(activeTab === 'results') return renderResults();
+      if(activeTab === 'standings') return renderStandings();
+      if(activeTab === 'notes') return renderNotes();
+    }
+
+    // -------------------------
+    // Views
+    // -------------------------
+
+    function renderDashboard(){
+      const teams = state.teams.length;
+      const weeks = state.schedule.length;
+      const completed = countCompletedMatchups();
+      const totalMatchups = state.schedule.reduce((sum,w)=>sum+w.matchups.length,0);
+
+      els.view.innerHTML = `
+        <div class="kpi">
+          <div class="card">
+            <div class="label">Teams</div>
+            <div class="value">${teams}</div>
+            <div class="note">${teams < 4 ? 'Add more teams to get going.' : 'Ready for matchups.'}</div>
+          </div>
+          <div class="card">
+            <div class="label">Schedule</div>
+            <div class="value">${weeks} wks</div>
+            <div class="note">${weeks ? 'You can edit matchups anytime.' : 'Generate a round-robin schedule.'}</div>
+          </div>
+          <div class="card">
+            <div class="label">Completed games</div>
+            <div class="value">${completed}/${totalMatchups}</div>
+            <div class="note">Standings update automatically.</div>
+          </div>
+        </div>
+
+        <div class="panel" style="box-shadow:none">
+          <div class="hd">
+            <h2>Commissioner To‑Do</h2>
+            <div class="row">
+              <button class="btn small" id="dashAddTeam">➕ Add team</button>
+              <button class="btn small primary" id="dashGenSched">🗓️ Generate schedule</button>
+            </div>
+          </div>
+          <div class="bd">
+            ${renderChecklistHTML()}
+          </div>
+        </div>
+      `;
+
+      document.getElementById('dashAddTeam')?.addEventListener('click', () => openTeamModal());
+      document.getElementById('dashGenSched')?.addEventListener('click', () => openGenerateScheduleModal());
+    }
+
+    function renderChecklistHTML(){
+      const issues = [];
+      if(state.teams.length < 2) issues.push(['Add at least 2 teams', 'Go to Teams → Add Team.']);
+      if(state.teams.length >= 2 && state.schedule.length === 0) issues.push(['Generate a schedule', 'Go to Schedule → Generate round‑robin.']);
+      if(state.schedule.length > 0 && state.league.currentWeek > state.schedule.length) issues.push(['Current week is beyond your schedule', 'Adjust Settings or regenerate schedule.']);
+
+      if(issues.length === 0){
+        return `<div class="empty"><strong>You're in good shape.</strong><div class="hint">Enter scores in Results to keep standings current.</div></div>`;
+      }
+      return `
+        <div class="tablewrap">
+          <table>
+            <thead><tr><th>Item</th><th>How to fix</th></tr></thead>
+            <tbody>
+              ${issues.map(([a,b])=>`<tr><td>${escapeHTML(a)}</td><td class="muted">${escapeHTML(b)}</td></tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderTeams(){
+      const rows = state.teams
+        .slice()
+        .sort((a,b)=>a.name.localeCompare(b.name))
+        .map(t => {
+          const badge = t.abbrev ? `<span class="chip mono">${escapeHTML(t.abbrev.toUpperCase())}</span>` : '';
+          const owner = t.owner ? escapeHTML(t.owner) : '<span class="muted">—</span>';
+          const colorDot = t.color ? `<span aria-hidden="true" style="display:inline-block;width:10px;height:10px;border-radius:999px;background:${escapeHTML(t.color)};border:1px solid ${'rgba(233,237,247,.22)'}"></span>` : '';
+          return `
+            <tr>
+              <td class="nowrap">
+                <div class="row" style="gap:8px">
+                  ${colorDot}
+                  <strong>${escapeHTML(t.name)}</strong>
+                  ${badge}
+                </div>
+              </td>
+              <td>${owner}</td>
+              <td class="num"><button class="btn small" data-edit-team="${t.id}">Edit</button></td>
+            </tr>
+          `;
+        }).join('');
+
+      els.view.innerHTML = `
+        <div class="row space" style="margin-bottom:10px">
+          <div class="hint">Teams are the backbone of everything. If you change teams after creating a schedule, consider regenerating the schedule.</div>
+          <div class="row">
+            <button class="btn" id="btnAddTeam">➕ Add Team</button>
+          </div>
+        </div>
+
+        ${state.teams.length === 0 ? `
+          <div class="empty"><strong>No teams yet.</strong><div class="hint">Add teams to generate a schedule.</div></div>
+        ` : `
+          <div class="tablewrap">
+            <table>
+              <thead><tr><th>Team</th><th>Owner</th><th class="num">Action</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        `}
+      `;
+
+      document.getElementById('btnAddTeam')?.addEventListener('click', () => openTeamModal());
+      els.view.querySelectorAll('[data-edit-team]')?.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-edit-team');
+          openTeamModal(id);
+        });
+      });
+    }
+
+    function renderSchedule(){
+      const weeks = state.schedule;
+      const canGenerate = state.teams.length >= 2;
+
+      els.view.innerHTML = `
+        <div class="row space" style="margin-bottom:10px">
+          <div class="hint">Generate a round-robin schedule or edit matchups manually. Byes appear as a matchup against “BYE”.</div>
+          <div class="row">
+            <button class="btn" id="btnGenSchedule" ${canGenerate ? '' : 'disabled'}>🗓️ Generate</button>
+            <button class="btn" id="btnClearSchedule" ${weeks.length ? '' : 'disabled'}>🧹 Clear</button>
+          </div>
+        </div>
+
+        ${weeks.length === 0 ? `
+          <div class="empty"><strong>No schedule yet.</strong><div class="hint">Click Generate to create matchups.</div></div>
+        ` : `
+          ${weeks.map(w => renderWeekCard(w, {editable:true, showScores:false})).join('')}
+        `}
+      `;
+
+      document.getElementById('btnGenSchedule')?.addEventListener('click', () => openGenerateScheduleModal());
+      document.getElementById('btnClearSchedule')?.addEventListener('click', () => {
+        if(!confirm('Clear the entire schedule? This will keep teams but remove all matchups and scores.')) return;
+        state.schedule = [];
+        if(state.league.currentWeek > 1) state.league.currentWeek = 1;
+        saveState("Schedule cleared");
+        render();
+      });
+
+      // Edit matchup swap
+      els.view.querySelectorAll('[data-swap]')?.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const week = Number(btn.getAttribute('data-week'));
+          const idx = Number(btn.getAttribute('data-idx'));
+          openSwapModal(week, idx);
+        });
+      });
+    }
+
+    function renderResults(){
+      const weekCount = state.schedule.length || state.league.regularWeeks;
+      const current = clamp(state.league.currentWeek, 1, Math.max(1, weekCount));
+
+      const weekBar = `
+        <div class="weekbar" style="margin-bottom:10px">
+          <button class="btn" id="wkPrev" ${current <= 1 ? 'disabled' : ''}>← Prev</button>
+          <button class="btn" id="wkNext" ${current >= weekCount ? 'disabled' : ''}>Next →</button>
+          <span class="chip">Viewing Week ${current}${state.schedule.length ? '' : ' (no schedule yet)'}</span>
+          <span class="muted" style="font-size:12px">Set current week in Settings or use these buttons.</span>
+        </div>
+      `;
+
+      const week = state.schedule.find(w => w.week === current);
+
+      els.view.innerHTML = `
+        ${weekBar}
+        ${!week ? `
+          <div class="empty"><strong>No matchups for Week ${current}.</strong>
+            <div class="hint">Create a schedule first (Schedule → Generate). You can still set the current week in Settings.</div>
+          </div>
+        ` : `
+          ${renderWeekCard(week, {editable:false, showScores:true, allowScoreEdit:true})}
+          <div style="margin-top:12px" class="row space">
+            <div class="hint">Completed games count toward standings.</div>
+            <div class="row">
+              <button class="btn" id="btnMarkWeekComplete">✅ Mark all complete</button>
+              <button class="btn" id="btnClearWeek">🧽 Clear scores</button>
+            </div>
+          </div>
+        `}
+      `;
+
+      document.getElementById('wkPrev')?.addEventListener('click', () => { state.league.currentWeek = current - 1; saveState(`Week ${state.league.currentWeek}`); render(); });
+      document.getElementById('wkNext')?.addEventListener('click', () => { state.league.currentWeek = current + 1; saveState(`Week ${state.league.currentWeek}`); render(); });
+
+      // score changes
+      els.view.querySelectorAll('[data-score]')?.forEach(input => {
+        input.addEventListener('input', () => {
+          const w = Number(input.getAttribute('data-week'));
+          const idx = Number(input.getAttribute('data-idx'));
+          const side = input.getAttribute('data-side');
+          const val = input.value.trim() === '' ? null : Number(input.value);
+          const weekObj = state.schedule.find(x=>x.week===w);
+          if(!weekObj) return;
+          const m = weekObj.matchups[idx];
+          if(!m) return;
+          if(side === 'home') m.homeScore = (val === null || Number.isNaN(val)) ? null : val;
+          if(side === 'away') m.awayScore = (val === null || Number.isNaN(val)) ? null : val;
+          // auto-complete only when both scores exist
+          m.completed = (m.homeScore !== null && m.awayScore !== null);
+          saveState("Score updated", {silent:true});
+          renderShell();
+        });
+      });
+
+      // toggle completed
+      els.view.querySelectorAll('[data-complete]')?.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const w = Number(btn.getAttribute('data-week'));
+          const idx = Number(btn.getAttribute('data-idx'));
+          const weekObj = state.schedule.find(x=>x.week===w);
+          if(!weekObj) return;
+          const m = weekObj.matchups[idx];
+          if(!m) return;
+          m.completed = !m.completed;
+          saveState(m.completed ? 'Game marked complete' : 'Game marked incomplete');
+          render();
+        });
+      });
+
+      document.getElementById('btnMarkWeekComplete')?.addEventListener('click', () => {
+        if(!week) return;
+        week.matchups.forEach(m => {
+          if(m.homeId === 'BYE' || m.awayId === 'BYE') { m.completed = true; return; }
+          if(m.homeScore !== null && m.awayScore !== null) m.completed = true;
+        });
+        saveState('Week marked complete');
+        render();
+      });
+
+      document.getElementById('btnClearWeek')?.addEventListener('click', () => {
+        if(!week) return;
+        if(!confirm(`Clear all scores for Week ${current}?`)) return;
+        week.matchups.forEach(m => {
+          m.homeScore = null;
+          m.awayScore = null;
+          m.completed = (m.homeId === 'BYE' || m.awayId === 'BYE');
+        });
+        saveState('Scores cleared');
+        render();
+      });
+    }
+
+    function renderStandings(){
+      const standings = computeStandings();
+      const rows = standings.map((s, i) => {
+        const t = teamById(s.teamId);
+        const name = t ? t.name : '(Unknown)';
+        const owner = t?.owner ? escapeHTML(t.owner) : '<span class="muted">—</span>';
+        const streakChip = renderStreakChip(s.streak);
+        return `
+          <tr>
+            <td class="num">${i+1}</td>
+            <td><strong>${escapeHTML(name)}</strong></td>
+            <td>${owner}</td>
+            <td class="num mono">${s.w}-${s.l}${s.t ? `-${s.t}` : ''}</td>
+            <td class="num mono">${fmtNum(s.pf)}</td>
+            <td class="num mono">${fmtNum(s.pa)}</td>
+            <td class="num mono">${fmtNum(s.pf - s.pa)}</td>
+            <td>${streakChip}</td>
+          </tr>
+        `;
+      }).join('');
+
+      els.view.innerHTML = `
+        <div class="row space" style="margin-bottom:10px">
+          <div class="hint">Sorting uses W-L (then your tiebreaker: ${escapeHTML(state.league.tiebreaker.toUpperCase())}).</div>
+          <div class="row">
+            <button class="btn" id="btnRecalc">🔄 Refresh</button>
+          </div>
+        </div>
+
+        ${state.teams.length === 0 ? `
+          <div class="empty"><strong>No teams.</strong><div class="hint">Add teams first.</div></div>
+        ` : `
+          <div class="tablewrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="num">Rank</th>
+                  <th>Team</th>
+                  <th>Owner</th>
+                  <th class="num">W-L</th>
+                  <th class="num">PF</th>
+                  <th class="num">PA</th>
+                  <th class="num">Diff</th>
+                  <th>Streak</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+
+          <div style="margin-top:12px" class="empty">
+            <strong>Tiebreakers (simple)</strong>
+            <div class="hint">
+              <ul>
+                <li><span class="mono">W-L</span> always comes first.</li>
+                <li><span class="mono">PF</span> (Points For) is a common default because it rewards performance.</li>
+                <li><span class="mono">PA</span> can be useful if you want to reward defensive schedules.</li>
+                <li><span class="mono">H2H</span> here is only applied if two teams have played each other; otherwise it falls back to PF.</li>
+              </ul>
+            </div>
+          </div>
+        `}
+      `;
+
+      document.getElementById('btnRecalc')?.addEventListener('click', () => {
+        showToast('Standings refreshed');
+        render();
+      });
+    }
+
+    function renderNotes(){
+      const notes = state.league.notes ?? '';
+      els.view.innerHTML = `
+        <div class="row space" style="margin-bottom:10px">
+          <div class="hint">Keep reminders, rules, trade deadlines, or payout notes here.</div>
+          <div class="row">
+            <button class="btn primary" id="btnSaveNotes">💾 Save</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="notesArea">Notes</label>
+          <textarea id="notesArea" placeholder="e.g., Waivers process, etiquette, payment status...">${escapeHTML(notes)}</textarea>
+          <div class="hint">Saved locally in your browser.</div>
+        </div>
+      `;
+
+      document.getElementById('btnSaveNotes')?.addEventListener('click', () => {
+        const v = document.getElementById('notesArea')?.value ?? '';
+        state.league.notes = v;
+        saveState('Notes saved');
+      });
+    }
+
+    function renderWeekCard(week, opts){
+      const { editable, showScores, allowScoreEdit } = opts;
+      const matchups = week.matchups.map((m, idx) => {
+        const home = labelTeam(m.homeId);
+        const away = labelTeam(m.awayId);
+        const isBye = (m.homeId === 'BYE' || m.awayId === 'BYE');
+        const done = m.completed || isBye;
+        const chip = done ? `<span class="chip good">Complete</span>` : `<span class="chip warn">In progress</span>`;
+
+        const scores = showScores ? `
+          <div class="score">
+            <label class="sr-only" for="hs_${week.week}_${idx}">Home score</label>
+            <input id="hs_${week.week}_${idx}" type="number" step="0.1" min="0" ${allowScoreEdit ? '' : 'disabled'} value="${m.homeScore ?? ''}" data-score data-week="${week.week}" data-idx="${idx}" data-side="home" placeholder="Home" />
+            <span class="muted">—</span>
+            <label class="sr-only" for="as_${week.week}_${idx}">Away score</label>
+            <input id="as_${week.week}_${idx}" type="number" step="0.1" min="0" ${allowScoreEdit ? '' : 'disabled'} value="${m.awayScore ?? ''}" data-score data-week="${week.week}" data-idx="${idx}" data-side="away" placeholder="Away" />
+            <button class="btn small" data-complete data-week="${week.week}" data-idx="${idx}">${done ? '↩︎ Undo' : '✅ Complete'}</button>
+          </div>
+        ` : '';
+
+        const editBtn = editable ? `<button class="btn small" data-swap data-week="${week.week}" data-idx="${idx}">Swap</button>` : '';
+
+        return `
+          <div class="card" style="gap:10px">
+            <div class="row space">
+              <div class="row" style="gap:10px; flex-wrap:wrap">
+                <div>
+                  <div style="font-weight:800">${escapeHTML(home)}</div>
+                  <div class="muted" style="font-size:12px">vs</div>
+                  <div style="font-weight:800">${escapeHTML(away)}</div>
+                </div>
+              </div>
+              <div class="row">
+                ${chip}
+                ${editBtn}
+              </div>
+            </div>
+            ${scores}
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="panel" style="box-shadow:none; margin-bottom:12px">
+          <div class="hd">
+            <h2>Week ${week.week}</h2>
+            <span class="chip">${week.matchups.length} matchups</span>
+          </div>
+          <div class="bd" style="display:grid; gap:10px">${matchups}</div>
+        </div>
+      `;
+    }
+
+    // -------------------------
+    // Modals & Actions
+    // -------------------------
+
+    function openSettings(){
+      els.formSettings.leagueName.value = state.league.name;
+      els.formSettings.seasonYear.value = state.league.seasonYear;
+      els.formSettings.regularWeeks.value = state.league.regularWeeks;
+      els.formSettings.tiebreaker.value = state.league.tiebreaker;
+      els.formSettings.playoffNotes.value = state.league.playoffNotes ?? '';
+      els.dlgSettings.showModal();
+    }
+
+    function saveSettings(){
+      const fd = new FormData(els.formSettings);
+      const name = String(fd.get('leagueName') ?? '').trim();
+      const seasonYear = Number(fd.get('seasonYear'));
+      const regularWeeks = Number(fd.get('regularWeeks'));
+      const tiebreaker = String(fd.get('tiebreaker') ?? 'pf');
+      const playoffNotes = String(fd.get('playoffNotes') ?? '').trim();
+
+      if(!name) return showToast('League name is required', {kind:'bad'});
+      if(!Number.isFinite(seasonYear) || seasonYear < 2000) return showToast('Season year looks off', {kind:'bad'});
+      if(!Number.isFinite(regularWeeks) || regularWeeks < 1) return showToast('Regular-season weeks must be 1+', {kind:'bad'});
+      if(!['pf','pa','h2h'].includes(tiebreaker)) return showToast('Invalid tiebreaker', {kind:'bad'});
+
+      state.league.name = name;
+      state.league.seasonYear = seasonYear;
+      state.league.regularWeeks = regularWeeks;
+      state.league.tiebreaker = /** @type any */(tiebreaker);
+      state.league.playoffNotes = playoffNotes;
+      // keep currentWeek in range
+      if(state.league.currentWeek < 1) state.league.currentWeek = 1;
+
+      saveState('Settings saved');
+      els.dlgSettings.close();
+      render();
+    }
+
+    function openTeamModal(teamId){
+      const editing = Boolean(teamId);
+      const t = editing ? teamById(teamId) : null;
+
+      els.teamModalTitle.textContent = editing ? 'Edit Team' : 'Add Team';
+      els.formTeam.teamId.value = t?.id ?? '';
+      els.formTeam.teamName.value = t?.name ?? '';
+      els.formTeam.teamOwner.value = t?.owner ?? '';
+      els.formTeam.teamAbbrev.value = t?.abbrev ?? '';
+      els.formTeam.teamColor.value = t?.color ?? '';
+
+      els.btnDeleteTeam.hidden = !editing;
+
+      els.dlgTeam.showModal();
+    }
+
+    function upsertTeamFromForm(){
+      const fd = new FormData(els.formTeam);
+      const id = String(fd.get('teamId') ?? '').trim();
+      const name = String(fd.get('teamName') ?? '').trim();
+      const owner = String(fd.get('teamOwner') ?? '').trim();
+      const abbrevRaw = String(fd.get('teamAbbrev') ?? '').trim();
+      const color = String(fd.get('teamColor') ?? '').trim();
+
+      if(!name) return showToast('Team name is required', {kind:'bad'});
+      const abbrev = abbrevRaw ? abbrevRaw.toUpperCase().slice(0,4) : '';
+
+      // Basic validation for color
+      if(color && !isValidCssColor(color)){
+        return showToast('Color must be a valid CSS color (e.g., #4aa3ff)', {kind:'bad'});
+      }
+
+      // Abbrev uniqueness (optional)
+      if(abbrev){
+        const collision = state.teams.find(t => t.abbrev?.toUpperCase() === abbrev && t.id !== id);
+        if(collision) return showToast('That abbreviation is already used', {kind:'bad'});
+      }
+
+      if(id){
+        const idx = state.teams.findIndex(t => t.id === id);
+        if(idx === -1) return showToast('Team not found', {kind:'bad'});
+        state.teams[idx] = { ...state.teams[idx], name, owner, abbrev, color };
+        saveState('Team updated');
+      } else {
+        const newTeam = { id: uid(), name, owner, abbrev, color };
+        state.teams.push(newTeam);
+        saveState('Team added');
+      }
+
+      els.dlgTeam.close();
+      render();
+    }
+
+    function deleteTeamFromForm(){
+      const id = String(els.formTeam.teamId.value ?? '').trim();
+      if(!id) return;
+
+      const t = teamById(id);
+      const name = t?.name ?? 'this team';
+      const usedInSchedule = state.schedule.some(w => w.matchups.some(m => m.homeId === id || m.awayId === id));
+
+      const msg = usedInSchedule
+        ? `Delete “${name}”? It is used in the schedule. Deleting will also remove it from all matchups (set to BYE).`
+        : `Delete “${name}”?`;
+
+      if(!confirm(msg)) return;
+
+      state.teams = state.teams.filter(x => x.id !== id);
+      // scrub schedule references
+      state.schedule.forEach(w => {
+        w.matchups.forEach(m => {
+          if(m.homeId === id) m.homeId = 'BYE';
+          if(m.awayId === id) m.awayId = 'BYE';
+          if(m.homeId === 'BYE' || m.awayId === 'BYE'){
+            m.homeScore = null; m.awayScore = null; m.completed = true;
+          }
+        });
+      });
+
+      saveState('Team deleted');
+      els.dlgTeam.close();
+      render();
+    }
+
+    function openImport(){
+      els.importText.value = '';
+      els.dlgImport.showModal();
+    }
+
+    function doImport(){
+      const raw = els.importText.value.trim();
+      if(!raw) return showToast('Paste JSON to import', {kind:'warn'});
+
+      try{
+        const parsed = JSON.parse(raw);
+        const validated = validateState(parsed);
+        state = validated;
+        saveState('Imported successfully');
+        els.dlgImport.close();
+        setTab('dashboard');
+      } catch(err){
+        showToast('Import failed: invalid format', {kind:'bad'});
+        console.error(err);
+      }
+    }
+
+    function doExport(){
+      const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+      const a = document.createElement('a');
+      const safeName = state.league.name.replace(/[^a-z0-9\-\_ ]/gi,'').trim().replace(/\s+/g,'-').toLowerCase() || 'league';
+      a.href = URL.createObjectURL(blob);
+      a.download = `${safeName}-${state.league.seasonYear}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(a.href);
+      showToast('Exported JSON');
+    }
+
+    function doReset(){
+      if(!confirm('Reset everything? This cannot be undone.')) return;
+      localStorage.removeItem(STORE_KEY);
+      state = defaultState();
+      saveState('Reset complete');
+      setTab('dashboard');
+    }
+
+    function openGenerateScheduleModal(){
+      // Use a lightweight prompt flow (simple by design).
+      if(state.teams.length < 2){
+        return showToast('Add at least 2 teams first', {kind:'warn'});
+      }
+
+      const suggested = state.league.regularWeeks;
+      const weeksStr = prompt(`How many weeks? (Recommended: ${suggested})\n\nTip: Round-robin needs ~${Math.max(1, state.teams.length - 1)} weeks for a single cycle.`, String(suggested));
+      if(weeksStr === null) return;
+      const weeks = Number(weeksStr);
+      if(!Number.isFinite(weeks) || weeks < 1) return showToast('Weeks must be a positive number', {kind:'bad'});
+
+      const doubleStr = prompt('Double round-robin? (y/n)', 'n');
+      if(doubleStr === null) return;
+      const double = String(doubleStr).trim().toLowerCase().startsWith('y');
+
+      const shuffleStr = prompt('Shuffle teams before generating? (y/n)', 'y');
+      if(shuffleStr === null) return;
+      const shuffle = String(shuffleStr).trim().toLowerCase().startsWith('y');
+
+      if(state.schedule.length){
+        const ok = confirm('This will overwrite your current schedule (and scores). Continue?');
+        if(!ok) return;
+      }
+
+      state.schedule = generateRoundRobin(state.teams.map(t=>t.id), {weeks, double, shuffle});
+      state.league.currentWeek = 1;
+      saveState('Schedule generated');
+      setTab('schedule');
+    }
+
+    function openSwapModal(weekNum, matchupIdx){
+      const week = state.schedule.find(w => w.week === weekNum);
+      if(!week) return;
+      const m = week.matchups[matchupIdx];
+      if(!m) return;
+
+      const teamOptions = ['BYE', ...state.teams.map(t=>t.id)];
+
+      const homeLabel = labelTeam(m.homeId);
+      const awayLabel = labelTeam(m.awayId);
+
+      const newHome = prompt(`Swap matchups (Week ${weekNum})\n\nCurrent home: ${homeLabel}\nEnter new home team name or abbreviation (or BYE):`, homeLabel);
+      if(newHome === null) return;
+      const newAway = prompt(`Current away: ${awayLabel}\nEnter new away team name or abbreviation (or BYE):`, awayLabel);
+      if(newAway === null) return;
+
+      const homeId = resolveTeamInput(newHome, teamOptions);
+      const awayId = resolveTeamInput(newAway, teamOptions);
+      if(!homeId || !awayId) return showToast('Could not match one of those teams', {kind:'bad'});
+      if(homeId === awayId) return showToast('Home and away cannot be the same', {kind:'bad'});
+
+      m.homeId = homeId;
+      m.awayId = awayId;
+      m.homeScore = null;
+      m.awayScore = null;
+      m.completed = (homeId === 'BYE' || awayId === 'BYE');
+      saveState('Matchup updated');
+      render();
+    }
+
+    function resolveTeamInput(input, validIds){
+      const raw = String(input).trim();
+      if(!raw) return null;
+      if(raw.toUpperCase() === 'BYE') return 'BYE';
+
+      // Try direct name match
+      const t1 = state.teams.find(t => t.name.toLowerCase() === raw.toLowerCase());
+      if(t1) return t1.id;
+
+      // Try abbreviation
+      const t2 = state.teams.find(t => (t.abbrev ?? '').toLowerCase() === raw.toLowerCase());
+      if(t2) return t2.id;
+
+      // Try contains
+      const t3 = state.teams.find(t => t.name.toLowerCase().includes(raw.toLowerCase()));
+      if(t3) return t3.id;
+
+      return null;
+    }
+
+    // -------------------------
+    // Standings & Computations
+    // -------------------------
+
+    function computeStandings(){
+      // Initialize
+      const map = new Map();
+      state.teams.forEach(t => {
+        map.set(t.id, { teamId: t.id, w:0,l:0,t:0, pf:0, pa:0, games:[], streak:[] });
+      });
+
+      // Walk all completed matchups
+      for(const w of state.schedule){
+        for(const m of w.matchups){
+          const isBye = (m.homeId === 'BYE' || m.awayId === 'BYE');
+          if(isBye) continue;
+          if(!m.completed) continue;
+          if(m.homeScore === null || m.awayScore === null) continue;
+
+          const home = map.get(m.homeId);
+          const away = map.get(m.awayId);
+          if(!home || !away) continue;
+
+          home.pf += m.homeScore;
+          home.pa += m.awayScore;
+          away.pf += m.awayScore;
+          away.pa += m.homeScore;
+
+          // record for simple h2h
+          home.games.push({opp: m.awayId, for: m.homeScore, against: m.awayScore});
+          away.games.push({opp: m.homeId, for: m.awayScore, against: m.homeScore});
+
+          if(m.homeScore > m.awayScore){
+            home.w += 1;
+            away.l += 1;
+            home.streak.push('W');
+            away.streak.push('L');
+          } else if(m.homeScore < m.awayScore){
+            home.l += 1;
+            away.w += 1;
+            home.streak.push('L');
+            away.streak.push('W');
+          } else {
+            home.t += 1;
+            away.t += 1;
+            home.streak.push('T');
+            away.streak.push('T');
+          }
+        }
+      }
+
+      const items = Array.from(map.values()).map(s => ({...s, streak: collapseStreak(s.streak)}));
+
+      // Sort
+      items.sort((a,b) => {
+        // Primary: wins, then losses, then ties
+        if(b.w !== a.w) return b.w - a.w;
+        if(a.l !== b.l) return a.l - b.l;
+        if(b.t !== a.t) return b.t - a.t;
+
+        // Secondary tiebreaker
+        const tb = state.league.tiebreaker;
+        if(tb === 'pf'){
+          if(b.pf !== a.pf) return b.pf - a.pf;
+        } else if(tb === 'pa'){
+          if(a.pa !== b.pa) return a.pa - b.pa;
+        } else if(tb === 'h2h'){
+          const h2h = headToHeadCompare(a.teamId, b.teamId);
+          if(h2h !== 0) return h2h;
+          if(b.pf !== a.pf) return b.pf - a.pf; // fallback
+        }
+
+        // Final fallback: point diff
+        const diffB = b.pf - b.pa;
+        const diffA = a.pf - a.pa;
+        if(diffB !== diffA) return diffB - diffA;
+
+        // Stable by name
+        const an = (teamById(a.teamId)?.name ?? a.teamId);
+        const bn = (teamById(b.teamId)?.name ?? b.teamId);
+        return an.localeCompare(bn);
+      });
+
+      return items;
+    }
+
+    function headToHeadCompare(teamA, teamB){
+      // Returns negative if A should come after B.
+      // We'll compute A's record vs B only.
+      let aW=0, aL=0, aT=0;
+      for(const w of state.schedule){
+        for(const m of w.matchups){
+          if(!m.completed) continue;
+          if(m.homeScore === null || m.awayScore === null) continue;
+          const isPair = (m.homeId === teamA && m.awayId === teamB) || (m.homeId === teamB && m.awayId === teamA);
+          if(!isPair) continue;
+          // compute for teamA
+          const aScore = (m.homeId === teamA) ? m.homeScore : m.awayScore;
+          const bScore = (m.homeId === teamA) ? m.awayScore : m.homeScore;
+          if(aScore > bScore) aW++;
+          else if(aScore < bScore) aL++;
+          else aT++;
+        }
+      }
+      if(aW+aL+aT === 0) return 0; // no h2h games
+      if(aW !== 0 || aL !== 0){
+        // prefer more wins
+        return (aW === aL) ? 0 : (aW > aL ? -1 : 1); // -1 means A ranks above B
+      }
+      // all ties
+      return 0;
+    }
+
+    function collapseStreak(list){
+      // list like ['W','W','L'] -> 'W2' (latest result streak)
+      if(list.length === 0) return '';
+      const last = list[list.length-1];
+      let n = 0;
+      for(let i=list.length-1;i>=0;i--){
+        if(list[i] === last) n++; else break;
+      }
+      return `${last}${n}`;
+    }
+
+    function renderStreakChip(streak){
+      if(!streak) return '<span class="chip">—</span>';
+      const kind = streak.startsWith('W') ? 'good' : streak.startsWith('L') ? 'bad' : 'warn';
+      return `<span class="chip ${kind}">${escapeHTML(streak)}</span>`;
+    }
+
+    function countCompletedMatchups(){
+      let n = 0;
+      for(const w of state.schedule){
+        for(const m of w.matchups){
+          const isBye = (m.homeId === 'BYE' || m.awayId === 'BYE');
+          if(isBye) { n++; continue; }
+          if(m.completed) n++;
+        }
+      }
+      return n;
+    }
+
+    // -------------------------
+    // Schedule Generation
+    // -------------------------
+
+    function generateRoundRobin(teamIds, {weeks, double, shuffle}){
+      // Circle method. If odd, add BYE.
+      let ids = teamIds.slice();
+      if(shuffle) ids = shuffleArray(ids);
+
+      const hasOdd = ids.length % 2 === 1;
+      if(hasOdd) ids.push('BYE');
+
+      const n = ids.length;
+      const rounds = n - 1;
+
+      // Create pairings for a single cycle
+      let arr = ids.slice();
+      const cycle = [];
+      for(let r=0; r<rounds; r++){
+        const matchups = [];
+        for(let i=0; i<n/2; i++){
+          const home = arr[i];
+          const away = arr[n-1-i];
+          // alternate home/away by round to mix
+          const flip = (r % 2 === 1);
+          const homeId = flip ? away : home;
+          const awayId = flip ? home : away;
+          matchups.push({
+            homeId,
+            awayId,
+            homeScore: null,
+            awayScore: null,
+            completed: (homeId === 'BYE' || awayId === 'BYE'),
+          });
+        }
+        cycle.push(matchups);
+        // rotate (keep first fixed)
+        arr = rotateForRoundRobin(arr);
+      }
+
+      let allRounds = cycle;
+      if(double){
+        // mirror with swapped home/away
+        const mirrored = cycle.map(ms => ms.map(m => ({
+          homeId: m.awayId,
+          awayId: m.homeId,
+          homeScore: null,
+          awayScore: null,
+          completed: (m.homeId === 'BYE' || m.awayId === 'BYE'),
+        })));
+        allRounds = cycle.concat(mirrored);
+      }
+
+      // Expand/trim to requested weeks
+      const out = [];
+      for(let w=1; w<=weeks; w++){
+        const ms = allRounds[(w-1) % allRounds.length];
+        // deep copy (no shared refs)
+        out.push({week: w, matchups: ms.map(m => ({...m}))});
+      }
+      return out;
+    }
+
+    function rotateForRoundRobin(arr){
+      // keep index 0 fixed
+      const fixed = arr[0];
+      const rest = arr.slice(1);
+      rest.unshift(rest.pop());
+      return [fixed, ...rest];
+    }
+
+    // -------------------------
+    // Persistence
+    // -------------------------
+
+    function autosave(){
+      // Mark saved on state changes via saveState()
+      // This function exists for future expansion.
+    }
+
+    function loadState(){
+      const raw = localStorage.getItem(STORE_KEY);
+      if(!raw){
+        const s = defaultState();
+        // seed with example teams (tiny) to make the UI feel alive; easy to delete.
+        s.teams = [
+          {id: uid(), name: 'Gridiron Gurus', owner: 'Kris', abbrev: 'GG', color: '#4aa3ff'},
+          {id: uid(), name: 'Waiver Wire Wizards', owner: 'Jake', abbrev: 'WWW', color: '#31d0aa'},
+          {id: uid(), name: 'Monday Night Miracles', owner: 'Zoe', abbrev: 'MNM', color: '#ffd166'},
+          {id: uid(), name: 'Bye Week Bandits', owner: 'Gina', abbrev: 'BYE', color: '#ff5b6b'},
+        ];
+        // No schedule by default; you choose when to generate.
+        return s;
+      }
+
+      try{
+        const parsed = JSON.parse(raw);
+        return validateState(parsed);
+      } catch {
+        return defaultState();
+      }
+    }
+
+    function saveState(message = 'Saved', opts={}){
+      localStorage.setItem(STORE_KEY, JSON.stringify(state));
+      els.dataStatus.textContent = 'Saved';
+      if(!opts.silent) showToast(message);
+      renderShell();
+    }
+
+    function validateState(s){
+      // Minimal but strict-ish validation to avoid broken UI.
+      const d = defaultState();
+      if(!s || typeof s !== 'object') return d;
+
+      const league = s.league && typeof s.league === 'object' ? s.league : d.league;
+      const teams = Array.isArray(s.teams) ? s.teams : [];
+      const schedule = Array.isArray(s.schedule) ? s.schedule : [];
+
+      const clean = {
+        league: {
+          name: typeof league.name === 'string' && league.name.trim() ? league.name.trim() : d.league.name,
+          seasonYear: Number.isFinite(Number(league.seasonYear)) ? Number(league.seasonYear) : d.league.seasonYear,
+          regularWeeks: Number.isFinite(Number(league.regularWeeks)) ? Number(league.regularWeeks) : d.league.regularWeeks,
+          tiebreaker: ['pf','pa','h2h'].includes(league.tiebreaker) ? league.tiebreaker : d.league.tiebreaker,
+          playoffNotes: typeof league.playoffNotes === 'string' ? league.playoffNotes : '',
+          notes: typeof league.notes === 'string' ? league.notes : '',
+          currentWeek: Number.isFinite(Number(league.currentWeek)) ? Number(league.currentWeek) : 1,
+        },
+        teams: teams
+          .filter(t => t && typeof t === 'object' && typeof t.id === 'string' && typeof t.name === 'string')
+          .map(t => ({
+            id: t.id,
+            name: String(t.name).trim() || 'Unnamed',
+            owner: typeof t.owner === 'string' ? t.owner.trim() : '',
+            abbrev: typeof t.abbrev === 'string' ? t.abbrev.trim().slice(0,4) : '',
+            color: typeof t.color === 'string' ? t.color.trim() : '',
+          })),
+        schedule: schedule
+          .filter(w => w && typeof w === 'object' && Number.isFinite(Number(w.week)) && Array.isArray(w.matchups))
+          .map(w => ({
+            week: Number(w.week),
+            matchups: w.matchups
+              .filter(m => m && typeof m === 'object' && typeof m.homeId === 'string' && typeof m.awayId === 'string')
+              .map(m => ({
+                homeId: m.homeId,
+                awayId: m.awayId,
+                homeScore: (m.homeScore === null || m.homeScore === undefined || m.homeScore === '') ? null : Number(m.homeScore),
+                awayScore: (m.awayScore === null || m.awayScore === undefined || m.awayScore === '') ? null : Number(m.awayScore),
+                completed: Boolean(m.completed) || (m.homeId === 'BYE' || m.awayId === 'BYE'),
+              }))
+          }))
+      };
+
+      // clamp currentWeek
+      clean.league.currentWeek = clamp(clean.league.currentWeek, 1, Math.max(1, clean.schedule.length || clean.league.regularWeeks));
+      return clean;
+    }
+
+    function defaultState(){
+      const now = new Date();
+      const year = now.getFullYear();
+      return {
+        league: {
+          name: 'Fantasy Football League',
+          seasonYear: year,
+          regularWeeks: 14,
+          tiebreaker: 'pf',
+          playoffNotes: 'Example: Top 6 make playoffs. Top 2 get a bye.',
+          notes: '',
+          currentWeek: 1,
+        },
+        teams: [],
+        schedule: [],
+      };
+    }
+
+    // -------------------------
+    // Utilities
+    // -------------------------
+
+    function labelTeam(teamId){
+      if(teamId === 'BYE') return 'BYE';
+      const t = teamById(teamId);
+      if(!t) return '(Unknown)';
+      return t.abbrev ? `${t.name} (${t.abbrev.toUpperCase()})` : t.name;
+    }
+
+    function teamById(id){
+      return state.teams.find(t => t.id === id) || null;
+    }
+
+    function uid(){
+      return (crypto?.randomUUID?.() ?? `id_${Math.random().toString(16).slice(2)}_${Date.now()}`);
+    }
+
+    function escapeHTML(str){
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function clamp(n, min, max){
+      return Math.max(min, Math.min(max, n));
+    }
+
+    function fmtNum(n){
+      const x = Number(n);
+      if(!Number.isFinite(x)) return '0';
+      return x.toFixed(1).replace(/\.0$/, '');
+    }
+
+    function shuffleArray(arr){
+      const a = arr.slice();
+      for(let i=a.length-1;i>0;i--){
+        const j = Math.floor(Math.random()*(i+1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function isValidCssColor(value){
+      const s = new Option().style;
+      s.color = value;
+      return s.color !== '';
+    }
+
+    function showToast(message, {kind='good', meta=''} = {}){
+      if(toastTimer) clearTimeout(toastTimer);
+      els.toastMsg.textContent = message;
+      els.toastMeta.textContent = meta;
+      els.toast.hidden = false;
+      els.toast.style.borderColor = kind === 'bad'
+        ? 'rgba(255,91,107,.45)'
+        : kind === 'warn'
+        ? 'rgba(255,209,102,.45)'
+        : 'rgba(49,208,170,.45)';
+
+      toastTimer = setTimeout(() => {
+        els.toast.hidden = true;
+      }, 2200);
+    }
+  </script>
+</body>
+</html>

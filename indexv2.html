@@ -1,0 +1,1364 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Fantasy Football Commissioner Helper</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#111a33;
+      --panel2:#0f1730;
+      --text:#e9eefc;
+      --muted:#a8b3d6;
+      --line:#243059;
+      --good:#34d399;
+      --bad:#fb7185;
+      --warn:#fbbf24;
+      --btn:#1f2b55;
+      --btn2:#223061;
+      --accent:#7aa2ff;
+      --focus:#93c5fd;
+      --radius:14px;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:var(--sans);
+      background: radial-gradient(1200px 800px at 10% 10%, #152352, transparent 60%),
+                  radial-gradient(900px 600px at 90% 20%, #1b2b62, transparent 55%),
+                  var(--bg);
+      color:var(--text);
+      min-height:100vh;
+    }
+
+    header{
+      padding:18px 18px 10px;
+      max-width:1200px;
+      margin:0 auto;
+    }
+
+    .titleRow{
+      display:flex;
+      gap:12px;
+      align-items:flex-end;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+
+    h1{
+      font-size:20px;
+      margin:0;
+      letter-spacing:.2px;
+    }
+    .sub{
+      color:var(--muted);
+      font-size:13px;
+      margin-top:4px;
+    }
+
+    .topActions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    button, .btn{
+      border:1px solid var(--line);
+      background:linear-gradient(180deg, var(--btn2), var(--btn));
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:13px;
+      box-shadow: 0 8px 18px rgba(0,0,0,.25);
+      transition: transform .05s ease, border-color .15s ease, opacity .15s ease;
+      user-select:none;
+    }
+    button:hover{ border-color:#32407a; }
+    button:active{ transform: translateY(1px); }
+    button.secondary{
+      background:transparent;
+      box-shadow:none;
+    }
+    button.danger{
+      border-color:#5a2a3a;
+      background:linear-gradient(180deg, #3a1830, #2a1325);
+    }
+    button.good{
+      border-color:#1f4a39;
+      background:linear-gradient(180deg, #143a2d, #0f2f24);
+    }
+    button:disabled{
+      opacity:.5;
+      cursor:not-allowed;
+      transform:none;
+    }
+
+    main{
+      max-width:1200px;
+      margin:0 auto;
+      padding: 0 18px 30px;
+    }
+
+    .tabs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      padding:12px;
+      background:rgba(17,26,51,.7);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+    .tab{
+      padding:10px 12px;
+      border-radius: 12px;
+      border:1px solid transparent;
+      background:transparent;
+      color:var(--muted);
+      font-weight:700;
+    }
+    .tab.active{
+      color:var(--text);
+      border-color: var(--line);
+      background: rgba(122,162,255,.12);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap:14px;
+      margin-top:14px;
+    }
+    @media (max-width: 920px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background:rgba(17,26,51,.72);
+      border:1px solid var(--line);
+      border-radius: var(--radius);
+      padding:14px;
+      box-shadow: var(--shadow);
+    }
+    .card h2{
+      margin:0 0 10px 0;
+      font-size:15px;
+      letter-spacing:.2px;
+    }
+    .muted{ color:var(--muted); }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    label{
+      display:block;
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:6px;
+      font-weight:700;
+    }
+    input, select, textarea{
+      width:100%;
+      padding:10px 10px;
+      border-radius: 12px;
+      border:1px solid var(--line);
+      background: rgba(15,23,48,.9);
+      color:var(--text);
+      outline:none;
+    }
+    input:focus, select:focus, textarea:focus{
+      border-color: var(--focus);
+      box-shadow: 0 0 0 3px rgba(147,197,253,.15);
+    }
+    textarea{ min-height: 140px; font-family: var(--mono); font-size: 12px; }
+
+    .field{
+      flex:1;
+      min-width: 180px;
+    }
+    .field.small{ min-width: 120px; max-width: 160px; }
+    .field.tiny{ min-width: 90px; max-width: 120px; }
+
+    table{
+      width:100%;
+      border-collapse: collapse;
+      overflow:hidden;
+      border-radius: 12px;
+      border:1px solid var(--line);
+    }
+    th, td{
+      padding:10px 10px;
+      border-bottom:1px solid rgba(36,48,89,.75);
+      font-size:13px;
+      text-align:left;
+      vertical-align: middle;
+    }
+    th{
+      color:var(--muted);
+      font-size:12px;
+      letter-spacing:.3px;
+      text-transform: uppercase;
+    }
+    tr:hover td{ background: rgba(122,162,255,.06); }
+    .right{ text-align:right; }
+    .center{ text-align:center; }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 10px;
+      border-radius: 999px;
+      background: rgba(122,162,255,.12);
+      border: 1px solid rgba(122,162,255,.25);
+      color: var(--text);
+      font-size:12px;
+      font-weight:700;
+      white-space:nowrap;
+    }
+
+    .divider{
+      height:1px;
+      background: var(--line);
+      margin:12px 0;
+      opacity:.8;
+    }
+
+    .hint{
+      font-size:12px;
+      color:var(--muted);
+      line-height: 1.45;
+    }
+
+    .toast{
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      background: rgba(17,26,51,.92);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: 14px;
+      padding: 12px 14px;
+      max-width: 360px;
+      display:none;
+    }
+    .toast.show{ display:block; }
+    .toast strong{ display:block; margin-bottom:4px; }
+    .toast .small{ color:var(--muted); font-size:12px; }
+
+    .matchup{
+      display:grid;
+      grid-template-columns: 1fr auto 1fr auto;
+      gap:10px;
+      align-items:center;
+      padding:10px;
+      border:1px solid rgba(36,48,89,.75);
+      border-radius: 14px;
+      background: rgba(15,23,48,.55);
+      margin-bottom:10px;
+    }
+    .teamName{
+      font-weight:800;
+      font-size:13px;
+    }
+    .vs{
+      color:var(--muted);
+      font-weight:900;
+      font-size:12px;
+      letter-spacing:.8px;
+    }
+    .score{
+      width: 90px;
+    }
+    .winner{
+      outline: 2px solid rgba(52,211,153,.25);
+      background: rgba(52,211,153,.06);
+    }
+    .loser{
+      outline: 2px solid rgba(251,113,133,.18);
+      background: rgba(251,113,133,.05);
+    }
+
+    .kbd{
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 2px 7px;
+      border-radius: 8px;
+      border:1px solid var(--line);
+      background: rgba(15,23,48,.9);
+      color: var(--muted);
+      display:inline-block;
+    }
+
+    .footerNote{
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .empty{
+      padding: 10px;
+      border:1px dashed rgba(36,48,89,.95);
+      border-radius: 14px;
+      background: rgba(15,23,48,.35);
+      color: var(--muted);
+      font-size: 13px;
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div class="titleRow">
+      <div>
+        <h1>Fantasy Football Commissioner Helper</h1>
+        <div class="sub">Manage teams, generate a schedule, enter weekly results, and auto-calc standings. Saves to your browser.</div>
+      </div>
+      <div class="topActions">
+        <button class="secondary" id="btnExportJson">Export JSON</button>
+        <button class="secondary" id="btnImportJson">Import JSON</button>
+        <button class="secondary" id="btnExportCsv">Export Standings CSV</button>
+        <button class="danger" id="btnReset">Reset Season</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="tabs" role="tablist" aria-label="Sections">
+      <button class="tab active" data-tab="settings" role="tab" aria-selected="true">League</button>
+      <button class="tab" data-tab="teams" role="tab" aria-selected="false">Teams</button>
+      <button class="tab" data-tab="schedule" role="tab" aria-selected="false">Schedule / Results</button>
+      <button class="tab" data-tab="standings" role="tab" aria-selected="false">Standings</button>
+      <button class="tab" data-tab="notes" role="tab" aria-selected="false">Notes</button>
+    </div>
+
+    <!-- SETTINGS -->
+    <section id="tab-settings" class="grid" style="display:grid;">
+      <div class="card">
+        <h2>League Settings</h2>
+        <div class="row">
+          <div class="field">
+            <label for="leagueName">League name</label>
+            <input id="leagueName" placeholder="e.g., Turner Thunder League" />
+          </div>
+          <div class="field small">
+            <label for="seasonYear">Season</label>
+            <input id="seasonYear" type="number" min="2000" max="2100" />
+          </div>
+          <div class="field small">
+            <label for="weeks">Regular-season weeks</label>
+            <input id="weeks" type="number" min="1" max="30" />
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="row">
+          <button class="good" id="btnSaveSettings">Save settings</button>
+          <button id="btnGenerateSchedule">Generate / Regenerate Schedule</button>
+          <span class="pill" id="pillStatus">Not saved yet</span>
+        </div>
+
+        <div class="divider"></div>
+        <div class="hint">
+          <strong>How it works:</strong>
+          <ul>
+            <li>Add teams (Teams tab) → generate a round-robin schedule (Schedule tab).</li>
+            <li>Enter weekly scores → standings update automatically.</li>
+            <li>Data is stored in <span class="kbd">localStorage</span> on this browser only.</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Quick Health Check</h2>
+        <div id="health" class="hint"></div>
+        <div class="divider"></div>
+        <div class="hint">
+          Tip: If your league uses divisions, you can still use this tool for record/PF/PA tracking — just sort by division manually or add a division field later.
+        </div>
+      </div>
+    </section>
+
+    <!-- TEAMS -->
+    <section id="tab-teams" class="grid" style="display:none;">
+      <div class="card">
+        <h2>Add / Edit Teams</h2>
+        <div class="row">
+          <div class="field">
+            <label for="teamName">Team name</label>
+            <input id="teamName" placeholder="e.g., The Waiver Wizards" />
+          </div>
+          <div class="field">
+            <label for="teamOwner">Owner (optional)</label>
+            <input id="teamOwner" placeholder="e.g., Kris" />
+          </div>
+          <div class="field tiny">
+            <label>&nbsp;</label>
+            <button class="good" id="btnAddTeam">Add</button>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div id="teamsTableWrap"></div>
+
+        <div class="footerNote">
+          Deleting a team will also remove it from the schedule and clear results. If you’re mid-season, consider editing instead.
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Commissioner Tools</h2>
+        <div class="hint">
+          <ul>
+            <li><strong>Mid-season edit:</strong> Change team names without breaking matchups.</li>
+            <li><strong>Rebuild schedule:</strong> Use “Generate / Regenerate Schedule” after adding/removing teams.</li>
+            <li><strong>Integrity:</strong> Standings are derived from matchup scores, not manually edited.</li>
+          </ul>
+        </div>
+        <div class="divider"></div>
+        <button class="secondary" id="btnRecalc">Recalculate standings</button>
+      </div>
+    </section>
+
+    <!-- SCHEDULE -->
+    <section id="tab-schedule" class="grid" style="display:none;">
+      <div class="card">
+        <h2>Schedule / Results</h2>
+        <div class="row">
+          <div class="field small">
+            <label for="weekPicker">Week</label>
+            <select id="weekPicker"></select>
+          </div>
+          <div class="field">
+            <label>&nbsp;</label>
+            <div class="row" style="justify-content:flex-start;">
+              <button class="good" id="btnSaveWeek">Save this week’s scores</button>
+              <button class="secondary" id="btnClearWeek">Clear week scores</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div id="matchupsWrap"></div>
+
+        <div class="footerNote">
+          BYE weeks appear when you have an odd number of teams. A BYE produces no standings change unless you enter a score (don’t).
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Week Summary</h2>
+        <div id="weekSummary" class="hint"></div>
+        <div class="divider"></div>
+        <div class="hint">
+          Sorting tiebreakers: <strong>W-L-T</strong> → <strong>Points For</strong> → <strong>Points Against (lower is better)</strong>.
+        </div>
+      </div>
+    </section>
+
+    <!-- STANDINGS -->
+    <section id="tab-standings" class="grid" style="display:none;">
+      <div class="card">
+        <h2>Standings</h2>
+        <div id="standingsWrap"></div>
+      </div>
+      <div class="card">
+        <h2>Commissioner Notes</h2>
+        <div class="hint">
+          <p>
+            If you want playoffs, you can treat “Regular-season weeks” as just the regular season. Export the standings
+            and handle seeding separately (or extend this app with a Playoffs tab).
+          </p>
+          <p>
+            Want divisions? Add a <span class="kbd">division</span> field to teams and group standings by division.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- NOTES / IMPORT -->
+    <section id="tab-notes" class="grid" style="display:none;">
+      <div class="card">
+        <h2>League Notes</h2>
+        <label for="leagueNotes">Notes (trade rules, waiver policy, dues, punishments, etc.)</label>
+        <textarea id="leagueNotes" placeholder="Type anything..."></textarea>
+        <div class="divider"></div>
+        <button class="good" id="btnSaveNotes">Save notes</button>
+      </div>
+
+      <div class="card">
+        <h2>Import / Export</h2>
+        <div class="hint">
+          Paste JSON below to import. Import will overwrite your current data.
+        </div>
+        <div class="divider"></div>
+        <label for="importBox">Import JSON</label>
+        <textarea id="importBox" placeholder='{"leagueName":"...","teams":[...],"schedule":{...}}'></textarea>
+        <div class="row">
+          <button class="good" id="btnDoImport">Import now</button>
+          <button class="secondary" id="btnCopyExport">Copy export JSON</button>
+        </div>
+        <div class="divider"></div>
+        <div class="hint">
+          Pro tip: Save your exported JSON in a safe place. Browser storage can be cleared by IT policies or profile resets.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" aria-live="polite" aria-atomic="true"></div>
+
+  <script>
+    /***********************
+     * Fantasy Commish App *
+     * Vanilla JS, single file.
+     ***********************/
+
+    const STORAGE_KEY = "ff_commish_app_v1";
+
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+    function uid() {
+      return Math.random().toString(16).slice(2) + "-" + Date.now().toString(16);
+    }
+
+    function round(n, digits=2){
+      const f = Math.pow(10, digits);
+      return Math.round((Number(n) + Number.EPSILON) * f) / f;
+    }
+
+    function toast(title, msg){
+      const el = $("#toast");
+      el.innerHTML = `<strong>${escapeHtml(title)}</strong><div class="small">${escapeHtml(msg || "")}</div>`;
+      el.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(()=>el.classList.remove("show"), 3200);
+    }
+
+    function escapeHtml(str){
+      return (str ?? "").toString()
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function downloadText(filename, text){
+      const blob = new Blob([text], {type:"text/plain;charset=utf-8"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      URL.revokeObjectURL(a.href);
+      a.remove();
+    }
+
+    function toCsv(rows){
+      return rows.map(r => r.map(v => {
+        const s = (v ?? "").toString();
+        const needs = /[",\n]/.test(s);
+        const esc = s.replaceAll('"','""');
+        return needs ? `"${esc}"` : esc;
+      }).join(",")).join("\n");
+    }
+
+    // ---------- Data Model ----------
+    function defaultState(){
+      const year = new Date().getFullYear();
+      return {
+        leagueName: "My Fantasy League",
+        seasonYear: year,
+        weeks: 14,
+        notes: "",
+        teams: [
+          // {id, name, owner}
+        ],
+        // schedule: { [weekNumber]: [ {id, homeId, awayId, homeScore, awayScore} ] }
+        schedule: {}
+      };
+    }
+
+    let state = loadState();
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) return defaultState();
+        const parsed = JSON.parse(raw);
+        return validateState(parsed);
+      }catch(e){
+        console.warn("Failed to load state:", e);
+        return defaultState();
+      }
+    }
+
+    function validateState(s){
+      const base = defaultState();
+      const out = {
+        ...base,
+        ...s,
+        teams: Array.isArray(s?.teams) ? s.teams : [],
+        schedule: (s?.schedule && typeof s.schedule === "object") ? s.schedule : {},
+      };
+
+      // Ensure numeric fields
+      out.seasonYear = Number(out.seasonYear) || base.seasonYear;
+      out.weeks = clampInt(Number(out.weeks) || base.weeks, 1, 30);
+
+      // Ensure teams have ids
+      out.teams = out.teams.map(t => ({
+        id: t.id || uid(),
+        name: (t.name || "Unnamed Team").toString(),
+        owner: (t.owner || "").toString()
+      }));
+
+      // Ensure schedule structure
+      for (const wk of Object.keys(out.schedule)){
+        const arr = out.schedule[wk];
+        if(!Array.isArray(arr)) out.schedule[wk] = [];
+        out.schedule[wk] = out.schedule[wk].map(m => ({
+          id: m.id || uid(),
+          homeId: m.homeId ?? null,
+          awayId: m.awayId ?? null,
+          homeScore: (m.homeScore === "" || m.homeScore === null || m.homeScore === undefined) ? "" : Number(m.homeScore),
+          awayScore: (m.awayScore === "" || m.awayScore === null || m.awayScore === undefined) ? "" : Number(m.awayScore),
+        }));
+      }
+
+      return out;
+    }
+
+    function saveState(){
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      updateStatusPill("Saved", "good");
+      renderAll();
+    }
+
+    function clampInt(n, min, max){
+      n = Math.floor(n);
+      return Math.min(max, Math.max(min, n));
+    }
+
+    function getTeamName(id){
+      if(id === "BYE") return "BYE";
+      return state.teams.find(t => t.id === id)?.name || "(Unknown)";
+    }
+
+    function getTeamOwner(id){
+      return state.teams.find(t => t.id === id)?.owner || "";
+    }
+
+    // ---------- Schedule Generation (Round Robin / Circle Method) ----------
+    function generateRoundRobin(teamIds, weeks){
+      // If odd, add BYE placeholder
+      const ids = [...teamIds];
+      const hasBye = (ids.length % 2 === 1);
+      if(hasBye) ids.push("BYE");
+
+      const n = ids.length;
+      const rounds = n - 1; // full round robin
+      const half = n / 2;
+
+      let arr = ids.slice();
+      const schedule = {}; // {week: matchups[]}
+
+      for(let r=1; r<=Math.min(weeks, rounds); r++){
+        const matchups = [];
+        for(let i=0; i<half; i++){
+          const home = arr[i];
+          const away = arr[n - 1 - i];
+
+          // Alternate home/away to reduce repeats
+          const evenRound = (r % 2 === 0);
+          const homeId = evenRound ? away : home;
+          const awayId = evenRound ? home : away;
+
+          matchups.push({
+            id: uid(),
+            homeId,
+            awayId,
+            homeScore: "",
+            awayScore: ""
+          });
+        }
+
+        schedule[r] = matchups;
+
+        // Rotate (keep first fixed, rotate the rest)
+        const fixed = arr[0];
+        const rest = arr.slice(1);
+        rest.unshift(rest.pop());
+        arr = [fixed, ...rest];
+      }
+
+      // If weeks > rounds, continue cycling (still reasonable for casual tracking)
+      // We'll keep generating by repeating the round-robin sequence.
+      if(weeks > rounds){
+        let wk = rounds + 1;
+        while(wk <= weeks){
+          const srcWeek = ((wk - 1) % rounds) + 1;
+          // clone matchups with new ids & empty scores
+          schedule[wk] = (schedule[srcWeek] || []).map(m => ({
+            id: uid(),
+            homeId: m.homeId,
+            awayId: m.awayId,
+            homeScore: "",
+            awayScore: ""
+          }));
+          wk++;
+        }
+      }
+
+      return schedule;
+    }
+
+    function regenerateSchedule(){
+      if(state.teams.length < 2){
+        toast("Add more teams", "You need at least 2 teams to generate a schedule.");
+        return;
+      }
+      const teamIds = state.teams.map(t => t.id);
+      state.schedule = generateRoundRobin(teamIds, state.weeks);
+      saveState();
+      toast("Schedule generated", "Go to Schedule / Results to enter scores.");
+    }
+
+    // ---------- Standings ----------
+    function computeStandings(){
+      // Initialize records
+      const rec = new Map();
+      for(const t of state.teams){
+        rec.set(t.id, {
+          id: t.id,
+          name: t.name,
+          owner: t.owner,
+          wins: 0, losses: 0, ties: 0,
+          pf: 0, pa: 0,
+          games: 0
+        });
+      }
+
+      // Walk schedule and tally only completed matchups (both scores present, numeric)
+      for(const wkStr of Object.keys(state.schedule)){
+        const matchups = state.schedule[wkStr] || [];
+        for(const m of matchups){
+          if(m.homeId === "BYE" || m.awayId === "BYE") continue;
+
+          const hs = m.homeScore;
+          const as = m.awayScore;
+
+          const hsOk = (hs !== "" && hs !== null && hs !== undefined && !Number.isNaN(Number(hs)));
+          const asOk = (as !== "" && as !== null && as !== undefined && !Number.isNaN(Number(as)));
+
+          if(!hsOk || !asOk) continue;
+
+          const home = rec.get(m.homeId);
+          const away = rec.get(m.awayId);
+          if(!home || !away) continue;
+
+          const h = Number(hs);
+          const a = Number(as);
+
+          home.pf += h; home.pa += a; home.games += 1;
+          away.pf += a; away.pa += h; away.games += 1;
+
+          if(h > a){ home.wins++; away.losses++; }
+          else if(a > h){ away.wins++; home.losses++; }
+          else { home.ties++; away.ties++; }
+        }
+      }
+
+      const rows = Array.from(rec.values()).map(r => ({
+        ...r,
+        pf: round(r.pf, 2),
+        pa: round(r.pa, 2),
+        pct: r.games ? round((r.wins + 0.5*r.ties) / r.games, 3) : 0
+      }));
+
+      // Sort: W-L-T, then PF (desc), then PA (asc)
+      rows.sort((a,b)=>{
+        if(b.wins !== a.wins) return b.wins - a.wins;
+        if(b.ties !== a.ties) return b.ties - a.ties;
+        if(a.losses !== b.losses) return a.losses - b.losses;
+        if(b.pf !== a.pf) return b.pf - a.pf;
+        return a.pa - b.pa;
+      });
+
+      return rows;
+    }
+
+    function summarizeWeek(week){
+      const matchups = state.schedule[week] || [];
+      let completed = 0;
+      let total = 0;
+      let points = 0;
+
+      for(const m of matchups){
+        if(m.homeId === "BYE" || m.awayId === "BYE") continue;
+        total++;
+        const hsOk = (m.homeScore !== "" && !Number.isNaN(Number(m.homeScore)));
+        const asOk = (m.awayScore !== "" && !Number.isNaN(Number(m.awayScore)));
+        if(hsOk && asOk){
+          completed++;
+          points += Number(m.homeScore) + Number(m.awayScore);
+        }
+      }
+
+      return { completed, total, points: round(points, 2) };
+    }
+
+    // ---------- UI Rendering ----------
+    function setActiveTab(tab){
+      $$(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+      const map = {
+        settings: "#tab-settings",
+        teams: "#tab-teams",
+        schedule: "#tab-schedule",
+        standings: "#tab-standings",
+        notes: "#tab-notes",
+      };
+      for(const k of Object.keys(map)){
+        $(map[k]).style.display = (k === tab) ? "grid" : "none";
+      }
+      // Update aria-selected
+      $$(".tab").forEach(b => b.setAttribute("aria-selected", b.classList.contains("active") ? "true" : "false"));
+
+      // Rerender tab-specific widgets
+      if(tab === "schedule") renderScheduleTab();
+      if(tab === "teams") renderTeamsTab();
+      if(tab === "standings") renderStandingsTab();
+      if(tab === "settings") renderHealth();
+      if(tab === "notes") renderNotesTab();
+    }
+
+    function renderAll(){
+      // Inputs
+      $("#leagueName").value = state.leagueName;
+      $("#seasonYear").value = state.seasonYear;
+      $("#weeks").value = state.weeks;
+      $("#leagueNotes").value = state.notes;
+
+      renderHealth();
+      renderTeamsTab();
+      renderWeekPicker();
+      renderScheduleTab();
+      renderStandingsTab();
+      renderNotesTab();
+    }
+
+    function renderHealth(){
+      const teams = state.teams.length;
+      const weeks = state.weeks;
+      const scheduledWeeks = Object.keys(state.schedule).length;
+      const scheduleOk = scheduledWeeks > 0 && scheduledWeeks >= Math.min(weeks, Math.max(1, teams-1));
+
+      const standings = computeStandings();
+      const anyGames = standings.some(r => r.games > 0);
+      const wk = Number($("#weekPicker")?.value || 1);
+      const wkSummary = summarizeWeek(wk);
+
+      $("#health").innerHTML = `
+        <div class="row" style="gap:10px;">
+          <span class="pill">Teams: ${teams}</span>
+          <span class="pill">Weeks: ${weeks}</span>
+          <span class="pill">Schedule: ${scheduleOk ? "Ready" : "Not generated"}</span>
+          <span class="pill">Games recorded: ${anyGames ? "Yes" : "No"}</span>
+        </div>
+        <div class="divider"></div>
+        <div class="hint">
+          <strong>Week ${wk}:</strong> ${wkSummary.completed}/${wkSummary.total} matchups have scores
+          ${wkSummary.completed ? `(Total points: ${wkSummary.points})` : ""}.
+        </div>
+      `;
+    }
+
+    function renderTeamsTab(){
+      const teams = state.teams;
+
+      if(teams.length === 0){
+        $("#teamsTableWrap").innerHTML = `<div class="empty">No teams yet. Add a few teams above.</div>`;
+        return;
+      }
+
+      const rows = teams.map((t, idx) => `
+        <tr>
+          <td class="center">${idx+1}</td>
+          <td>
+            <input data-edit-name="${t.id}" value="${escapeHtml(t.name)}" />
+          </td>
+          <td>
+            <input data-edit-owner="${t.id}" value="${escapeHtml(t.owner)}" placeholder="Owner" />
+          </td>
+          <td class="right">
+            <button class="secondary" data-del-team="${t.id}">Delete</button>
+          </td>
+        </tr>
+      `).join("");
+
+      $("#teamsTableWrap").innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th class="center" style="width:60px;">#</th>
+              <th>Team</th>
+              <th>Owner</th>
+              <th class="right" style="width:120px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <div class="footerNote">
+          Changes in these boxes are saved automatically when you click outside the field.
+        </div>
+      `;
+
+      // Bind edit events
+      $$("[data-edit-name]").forEach(inp => {
+        inp.addEventListener("change", (e)=>{
+          const id = e.target.getAttribute("data-edit-name");
+          const t = state.teams.find(x => x.id === id);
+          if(!t) return;
+          const val = e.target.value.trim() || "Unnamed Team";
+          t.name = val;
+          saveState();
+          toast("Updated", "Team name saved.");
+        });
+      });
+      $$("[data-edit-owner]").forEach(inp => {
+        inp.addEventListener("change", (e)=>{
+          const id = e.target.getAttribute("data-edit-owner");
+          const t = state.teams.find(x => x.id === id);
+          if(!t) return;
+          t.owner = e.target.value.trim();
+          saveState();
+          toast("Updated", "Owner saved.");
+        });
+      });
+
+      // Bind deletes
+      $$("[data-del-team]").forEach(btn => {
+        btn.addEventListener("click", ()=>{
+          const id = btn.getAttribute("data-del-team");
+          const t = state.teams.find(x => x.id === id);
+          if(!t) return;
+          if(!confirm(`Delete "${t.name}"? This will also clear schedule/results.`)) return;
+
+          state.teams = state.teams.filter(x => x.id !== id);
+          state.schedule = {}; // safest
+          saveState();
+          toast("Deleted", "Team removed and schedule cleared.");
+        });
+      });
+    }
+
+    function renderWeekPicker(){
+      const sel = $("#weekPicker");
+      const current = Number(sel.value || 1);
+      sel.innerHTML = "";
+
+      for(let w=1; w<=state.weeks; w++){
+        const opt = document.createElement("option");
+        opt.value = w;
+        opt.textContent = `Week ${w}`;
+        sel.appendChild(opt);
+      }
+
+      sel.value = clampInt(current, 1, state.weeks);
+    }
+
+    function renderScheduleTab(){
+      renderWeekPicker();
+
+      const week = Number($("#weekPicker").value);
+      const matchups = state.schedule[week] || [];
+
+      if(matchups.length === 0){
+        $("#matchupsWrap").innerHTML = `<div class="empty">No schedule for Week ${week}. Generate a schedule in the League tab.</div>`;
+        $("#weekSummary").innerHTML = `<div class="empty">Nothing to summarize yet.</div>`;
+        renderHealth();
+        return;
+      }
+
+      const html = matchups.map(m => {
+        const homeName = getTeamName(m.homeId);
+        const awayName = getTeamName(m.awayId);
+
+        const hs = m.homeScore;
+        const as = m.awayScore;
+
+        const hsOk = (hs !== "" && !Number.isNaN(Number(hs)));
+        const asOk = (as !== "" && !Number.isNaN(Number(as)));
+
+        let cls = "matchup";
+        if(m.homeId === "BYE" || m.awayId === "BYE"){
+          cls += "";
+        }else if(hsOk && asOk){
+          if(Number(hs) > Number(as)) cls += " winner";
+          else if(Number(as) > Number(hs)) cls += " loser";
+        }
+
+        const bye = (m.homeId === "BYE" || m.awayId === "BYE");
+
+        return `
+          <div class="${cls}">
+            <div>
+              <div class="teamName">${escapeHtml(homeName)}</div>
+              <div class="muted" style="font-size:12px;">${escapeHtml(getTeamOwner(m.homeId))}</div>
+            </div>
+            <div class="vs">VS</div>
+            <div>
+              <div class="teamName">${escapeHtml(awayName)}</div>
+              <div class="muted" style="font-size:12px;">${escapeHtml(getTeamOwner(m.awayId))}</div>
+            </div>
+            <div style="display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap;">
+              <input class="score" inputmode="decimal" placeholder="Home"
+                     data-score="home" data-match="${m.id}" value="${hs === "" ? "" : escapeHtml(hs)}"
+                     ${bye ? "disabled" : ""} />
+              <input class="score" inputmode="decimal" placeholder="Away"
+                     data-score="away" data-match="${m.id}" value="${as === "" ? "" : escapeHtml(as)}"
+                     ${bye ? "disabled" : ""} />
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      $("#matchupsWrap").innerHTML = html;
+
+      const sum = summarizeWeek(week);
+      $("#weekSummary").innerHTML = `
+        <div class="row" style="gap:10px;">
+          <span class="pill">Completed: ${sum.completed}/${sum.total}</span>
+          <span class="pill">Total points: ${sum.points}</span>
+        </div>
+        <div class="divider"></div>
+        <div class="hint">
+          Enter scores, then click <strong>Save this week’s scores</strong>. Standings update immediately.
+        </div>
+      `;
+
+      // live update highlights when typing (without saving)
+      $$("[data-match]").forEach(inp => {
+        inp.addEventListener("input", ()=>{
+          // quick visual only; no heavy recompute
+          const card = inp.closest(".matchup");
+          if(!card) return;
+          card.classList.remove("winner","loser");
+        });
+      });
+
+      renderHealth();
+    }
+
+    function renderStandingsTab(){
+      const rows = computeStandings();
+
+      if(state.teams.length === 0){
+        $("#standingsWrap").innerHTML = `<div class="empty">No teams yet.</div>`;
+        return;
+      }
+
+      const body = rows.map((r, i) => `
+        <tr>
+          <td class="center">${i+1}</td>
+          <td>
+            <div style="font-weight:900;">${escapeHtml(r.name)}</div>
+            <div class="muted" style="font-size:12px;">${escapeHtml(r.owner)}</div>
+          </td>
+          <td class="center">${r.wins}-${r.losses}-${r.ties}</td>
+          <td class="right">${r.pct.toFixed(3)}</td>
+          <td class="right">${r.pf.toFixed(2)}</td>
+          <td class="right">${r.pa.toFixed(2)}</td>
+          <td class="right">${r.games}</td>
+        </tr>
+      `).join("");
+
+      $("#standingsWrap").innerHTML = `
+        <table>
+          <thead>
+            <tr>
+              <th class="center" style="width:60px;">Rank</th>
+              <th>Team</th>
+              <th class="center" style="width:120px;">Record</th>
+              <th class="right" style="width:90px;">Pct</th>
+              <th class="right" style="width:110px;">PF</th>
+              <th class="right" style="width:110px;">PA</th>
+              <th class="right" style="width:90px;">Games</th>
+            </tr>
+          </thead>
+          <tbody>${body}</tbody>
+        </table>
+        <div class="footerNote">
+          Tiebreaks: W-L-T → PF (higher) → PA (lower).
+        </div>
+      `;
+    }
+
+    function renderNotesTab(){
+      $("#leagueNotes").value = state.notes || "";
+      $("#importBox").value = ""; // keep clean by default
+    }
+
+    function updateStatusPill(text, kind){
+      const pill = $("#pillStatus");
+      pill.textContent = text;
+      pill.style.background = kind === "good"
+        ? "rgba(52,211,153,.10)"
+        : kind === "warn"
+          ? "rgba(251,191,36,.10)"
+          : "rgba(122,162,255,.12)";
+      pill.style.borderColor = kind === "good"
+        ? "rgba(52,211,153,.25)"
+        : kind === "warn"
+          ? "rgba(251,191,36,.25)"
+          : "rgba(122,162,255,.25)";
+    }
+
+    // ---------- Actions ----------
+    function addTeam(){
+      const name = $("#teamName").value.trim();
+      const owner = $("#teamOwner").value.trim();
+
+      if(!name){
+        toast("Team name needed", "Enter a team name and try again.");
+        return;
+      }
+
+      state.teams.push({ id: uid(), name, owner });
+      $("#teamName").value = "";
+      $("#teamOwner").value = "";
+      state.schedule = {}; // safest
+      saveState();
+      toast("Team added", "Schedule cleared (regenerate when ready).");
+    }
+
+    function saveSettings(){
+      state.leagueName = $("#leagueName").value.trim() || "My Fantasy League";
+      state.seasonYear = clampInt(Number($("#seasonYear").value || new Date().getFullYear()), 2000, 2100);
+      state.weeks = clampInt(Number($("#weeks").value || 14), 1, 30);
+
+      // If weeks changed, trim schedule but keep what we can
+      const newSchedule = {};
+      for(let w=1; w<=state.weeks; w++){
+        if(state.schedule[w]) newSchedule[w] = state.schedule[w];
+      }
+      state.schedule = newSchedule;
+
+      saveState();
+      toast("Saved", "League settings updated.");
+    }
+
+    function saveNotes(){
+      state.notes = $("#leagueNotes").value;
+      saveState();
+      toast("Saved", "Notes updated.");
+    }
+
+    function saveWeekScores(){
+      const week = Number($("#weekPicker").value);
+      const matchups = state.schedule[week];
+      if(!matchups){
+        toast("No schedule", "Generate a schedule first.");
+        return;
+      }
+
+      const scoreInputs = $$(`[data-match]`);
+      const byId = new Map(matchups.map(m => [m.id, m]));
+
+      for(const inp of scoreInputs){
+        const matchId = inp.getAttribute("data-match");
+        const side = inp.getAttribute("data-score"); // home/away
+        const m = byId.get(matchId);
+        if(!m) continue;
+
+        // Allow empty => not recorded
+        const raw = inp.value.trim();
+        if(raw === ""){
+          if(side === "home") m.homeScore = "";
+          else m.awayScore = "";
+          continue;
+        }
+
+        const num = Number(raw);
+        if(Number.isNaN(num)){
+          toast("Invalid score", `Score "${raw}" is not a number.`);
+          return;
+        }
+
+        if(side === "home") m.homeScore = round(num, 2);
+        else m.awayScore = round(num, 2);
+      }
+
+      saveState();
+      toast("Week saved", `Scores saved for Week ${week}.`);
+      renderScheduleTab();
+    }
+
+    function clearWeekScores(){
+      const week = Number($("#weekPicker").value);
+      const matchups = state.schedule[week];
+      if(!matchups) return;
+
+      if(!confirm(`Clear all scores for Week ${week}?`)) return;
+      for(const m of matchups){
+        m.homeScore = "";
+        m.awayScore = "";
+      }
+      saveState();
+      toast("Cleared", `Scores cleared for Week ${week}.`);
+    }
+
+    function resetSeason(){
+      if(!confirm("Reset season? This clears teams, schedule, notes, and settings back to defaults.")) return;
+      state = defaultState();
+      saveState();
+      toast("Reset", "All data cleared.");
+      setActiveTab("settings");
+    }
+
+    function exportJson(){
+      const data = JSON.stringify(state, null, 2);
+      downloadText(`fantasy-commish-${state.seasonYear}.json`, data);
+      toast("Exported", "JSON downloaded.");
+    }
+
+    async function copyExportJson(){
+      const data = JSON.stringify(state, null, 2);
+      try{
+        await navigator.clipboard.writeText(data);
+        toast("Copied", "Export JSON copied to clipboard.");
+      }catch{
+        toast("Copy failed", "Your browser blocked clipboard access. Use Export JSON instead.");
+      }
+    }
+
+    function importJsonFromBox(){
+      const raw = $("#importBox").value.trim();
+      if(!raw){
+        toast("Paste JSON", "Nothing to import.");
+        return;
+      }
+      try{
+        const parsed = JSON.parse(raw);
+        const validated = validateState(parsed);
+        state = validated;
+        saveState();
+        toast("Imported", "Data imported successfully.");
+        setActiveTab("settings");
+      }catch(e){
+        toast("Import failed", "That JSON couldn't be parsed. Double-check formatting.");
+      }
+    }
+
+    function importJsonViaPrompt(){
+      setActiveTab("notes");
+      toast("Import ready", "Paste your JSON in the Import box, then click Import now.");
+      $("#importBox").focus();
+    }
+
+    function exportStandingsCsv(){
+      const rows = computeStandings();
+      const csvRows = [
+        ["Rank","Team","Owner","Wins","Losses","Ties","Pct","PF","PA","Games"],
+        ...rows.map((r,i)=>[
+          i+1, r.name, r.owner, r.wins, r.losses, r.ties,
+          r.pct.toFixed(3), r.pf.toFixed(2), r.pa.toFixed(2), r.games
+        ])
+      ];
+      downloadText(`standings-${state.seasonYear}.csv`, toCsv(csvRows));
+      toast("Exported", "Standings CSV downloaded.");
+    }
+
+    function recalcStandings(){
+      // Standings are derived, so this just triggers rerender and save (if you want to normalize scores)
+      // We'll normalize any numeric scores to rounded numbers.
+      for(const wkStr of Object.keys(state.schedule)){
+        for(const m of (state.schedule[wkStr] || [])){
+          if(m.homeScore !== "" && !Number.isNaN(Number(m.homeScore))) m.homeScore = round(Number(m.homeScore), 2);
+          if(m.awayScore !== "" && !Number.isNaN(Number(m.awayScore))) m.awayScore = round(Number(m.awayScore), 2);
+        }
+      }
+      saveState();
+      toast("Recalculated", "Standings refreshed from saved matchups.");
+    }
+
+    // ---------- Event Wiring ----------
+    function bindEvents(){
+      // Tabs
+      $$(".tab").forEach(btn => {
+        btn.addEventListener("click", ()=> setActiveTab(btn.dataset.tab));
+      });
+
+      // Settings
+      $("#btnSaveSettings").addEventListener("click", saveSettings);
+      $("#btnGenerateSchedule").addEventListener("click", regenerateSchedule);
+      $("#leagueName").addEventListener("change", ()=> updateStatusPill("Unsaved changes", "warn"));
+      $("#seasonYear").addEventListener("change", ()=> updateStatusPill("Unsaved changes", "warn"));
+      $("#weeks").addEventListener("change", ()=> updateStatusPill("Unsaved changes", "warn"));
+
+      // Teams
+      $("#btnAddTeam").addEventListener("click", addTeam);
+      $("#btnRecalc").addEventListener("click", recalcStandings);
+
+      // Schedule
+      $("#weekPicker").addEventListener("change", renderScheduleTab);
+      $("#btnSaveWeek").addEventListener("click", saveWeekScores);
+      $("#btnClearWeek").addEventListener("click", clearWeekScores);
+
+      // Notes
+      $("#btnSaveNotes").addEventListener("click", saveNotes);
+      $("#btnDoImport").addEventListener("click", importJsonFromBox);
+      $("#btnCopyExport").addEventListener("click", copyExportJson);
+
+      // Top actions
+      $("#btnReset").addEventListener("click", resetSeason);
+      $("#btnExportJson").addEventListener("click", exportJson);
+      $("#btnImportJson").addEventListener("click", importJsonViaPrompt);
+      $("#btnExportCsv").addEventListener("click", exportStandingsCsv);
+
+      // Keyboard shortcut: Ctrl/Cmd+S to save settings in League tab
+      document.addEventListener("keydown", (e)=>{
+        const isMac = navigator.platform.toLowerCase().includes("mac");
+        if((isMac ? e.metaKey : e.ctrlKey) && e.key.toLowerCase() === "s"){
+          e.preventDefault();
+          const active = $$(".tab").find(t => t.classList.contains("active"))?.dataset?.tab;
+          if(active === "settings") saveSettings();
+          else if(active === "schedule") saveWeekScores();
+          else if(active === "notes") saveNotes();
+        }
+      });
+    }
+
+    // ---------- Boot ----------
+    function boot(){
+      bindEvents();
+      updateStatusPill("Loaded", "good");
+      renderAll();
+      setActiveTab("settings");
+    }
+
+    boot();
+  </script>
+</body>
+</html>
